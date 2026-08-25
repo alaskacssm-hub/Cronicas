@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crônicas do Destino</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root {
+  --ink:        #1a1a2e;
+  --ink-light:  #2d2d4e;
+  --parchment:  #f0e6c8;
+  --parchment2: #e8d9b0;
+  --blood:      #8b1a1a;
+  --blood-light:#c0392b;
+  --gold:       #c9a84c;
+  --gold-light: #f0d070;
+  --magic:      #4a2080;
+  --magic-light:#7b52d9;
+  --forest:     #1a5c38;
+  --forest-light:#2e8b57;
+  --muted:      #7a6a4a;
+  --border:     #8a7050;
+  --pixel: 'Press Start 2P', monospace;
+  --body:  Georgia, 'Times New Roman', serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #0d0d1a; color: var(--parchment); font-family: var(--body); min-height: 100vh; overflow-x: hidden; }
+
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+}
+body::after {
+  content: ''; position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.5) 100%);
+}
+
+#app { max-width: 760px; margin: 0 auto; padding: 20px 16px 60px; position: relative; z-index: 1; }
+
+.pbox {
+  background: var(--ink); border: 3px solid var(--border);
+  box-shadow: inset 0 0 0 2px var(--ink-light), 4px 4px 0 rgba(0,0,0,0.6);
+  padding: 16px;
+}
+
+/* ── TITLE ── */
+#title-screen { text-align: center; padding: 32px 16px; }
+.game-logo {
+  font-family: var(--pixel); font-size: clamp(13px, 3.5vw, 22px);
+  color: var(--gold); text-shadow: 3px 3px 0 var(--blood), 6px 6px 0 rgba(0,0,0,0.5);
+  line-height: 1.8; margin-bottom: 8px; letter-spacing: 2px;
+}
+.game-logo span { color: var(--parchment); }
+.game-sub { font-family: var(--pixel); font-size: 7px; color: var(--muted); letter-spacing: 3px; margin-bottom: 36px; }
+.pixel-dragon { font-size: clamp(48px,12vw,88px); line-height: 1; margin-bottom: 28px; display: block; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+.ts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 460px; margin: 0 auto 20px; }
+@media(max-width:420px){ .ts-grid{ grid-template-columns:1fr; } }
+
+.px-btn {
+  font-family: var(--pixel); font-size: 8px; padding: 14px 8px; cursor: pointer;
+  background: var(--ink-light); color: var(--gold); border: 3px solid var(--border);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.7); transition: transform 0.08s, box-shadow 0.08s;
+  letter-spacing: 1px; line-height: 1.8;
+}
+.px-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0 rgba(0,0,0,0.7); color: var(--gold-light); }
+.px-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 rgba(0,0,0,0.7); }
+.px-btn.primary { background: var(--blood); color: var(--parchment); border-color: var(--gold); }
+.px-btn.primary:hover { background: var(--blood-light); }
+.px-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+.ver { font-family: var(--pixel); font-size: 6px; color: var(--muted); margin-top: 12px; }
+
+/* ── MODALS ── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.88); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+.modal {
+  background: var(--ink); border: 3px solid var(--gold);
+  box-shadow: 6px 6px 0 rgba(0,0,0,0.8); padding: 24px; max-width: 480px; width: 100%;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-title { font-family: var(--pixel); font-size: 10px; color: var(--gold); margin-bottom: 20px; text-align: center; letter-spacing: 2px; }
+.modal-lbl { font-family: var(--pixel); font-size: 7px; color: var(--muted); margin-bottom: 8px; letter-spacing: 1px; }
+.px-input {
+  font-family: var(--pixel); font-size: 8px; width: 100%; padding: 10px 12px;
+  background: #0d0d1a; color: var(--parchment); border: 2px solid var(--border);
+  outline: none; margin-bottom: 16px;
+}
+.px-input:focus { border-color: var(--gold); }
+.genre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+.genre-card {
+  font-family: var(--pixel); font-size: 7px; padding: 12px 8px; cursor: pointer;
+  background: var(--ink-light); color: var(--parchment); border: 2px solid var(--border);
+  text-align: center; line-height: 2; transition: transform 0.08s;
+}
+.genre-card:hover { transform: translate(-1px,-1px); border-color: var(--gold); }
+.genre-card.sel { background: var(--blood); border-color: var(--gold); color: var(--gold-light); }
+.genre-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+.modal-row { display: flex; gap: 8px; }
+.modal-row .px-btn { flex: 1; }
+
+/* ── HUD ── */
+#hud { display: none; margin-bottom: 12px; }
+.hud-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.hud-name { font-family: var(--pixel); font-size: 9px; color: var(--gold); }
+.hud-genre { font-family: var(--pixel); font-size: 6px; color: var(--muted); margin-left: 10px; }
+.hud-right { display: flex; align-items: center; gap: 10px; }
+.hud-turn { font-family: var(--pixel); font-size: 7px; color: var(--muted); }
+
+.stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; margin-bottom: 8px; }
+.stat-block { text-align: center; }
+.stat-lbl { font-family: var(--pixel); font-size: 6px; color: var(--muted); margin-bottom: 4px; }
+.stat-val { font-family: var(--pixel); font-size: 12px; margin-bottom: 4px; }
+.stat-val.hp  { color: var(--blood-light); }
+.stat-val.mp  { color: var(--magic-light); }
+.stat-val.str { color: var(--gold); }
+.stat-val.kar { color: var(--forest-light); }
+.bar-bg { height: 4px; background: #333; border: 1px solid #444; }
+.bar-fill { height: 100%; transition: width 0.4s; }
+.bar-hp  { background: var(--blood-light); }
+.bar-mp  { background: var(--magic-light); }
+.bar-str { background: var(--gold); }
+.bar-kar { background: var(--forest-light); }
+
+.inv-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; padding-top: 8px; border-top: 1px solid #333; }
+.inv-lbl { font-family: var(--pixel); font-size: 6px; color: var(--muted); }
+.inv-chip { font-family: var(--pixel); font-size: 6px; padding: 3px 7px; background: var(--ink-light); border: 1px solid var(--border); color: var(--parchment2); }
+
+/* ── STORY ── */
+#story-wrap { display: none; margin-bottom: 12px; }
+.story-panel {
+  background: var(--parchment); border: 3px solid var(--border);
+  box-shadow: inset 2px 2px 0 rgba(255,255,255,0.3), 4px 4px 0 rgba(0,0,0,0.6);
+  padding: 20px 22px; min-height: 150px; position: relative;
+}
+.story-panel::before {
+  content: ''; position: absolute; inset: 4px; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 23px, rgba(139,112,60,0.12) 23px, rgba(139,112,60,0.12) 24px);
+}
+.story-text { font-family: var(--body); font-size: 15px; color: var(--ink); line-height: 1.75; position: relative; z-index: 1; }
+.story-text.loading { font-family: var(--pixel); font-size: 7px; color: var(--muted); letter-spacing: 1px; }
+.cursor { display: inline-block; width: 10px; height: 15px; background: var(--ink); vertical-align: middle; margin-left: 2px; animation: blink 0.7s steps(1) infinite; }
+@keyframes blink { 50%{ opacity:0; } }
+
+/* ── CHOICES ── */
+#choices-wrap { display: none; margin-bottom: 12px; }
+.choice-btn {
+  font-family: var(--pixel); font-size: 8px; width: 100%; text-align: left;
+  padding: 13px 14px; cursor: pointer; background: var(--ink-light);
+  color: var(--parchment); border: 2px solid var(--border);
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.6); margin-bottom: 8px;
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  transition: transform 0.08s, box-shadow 0.08s; line-height: 1.8;
+}
+.choice-btn:hover:not(:disabled) { transform: translate(-2px,-2px); box-shadow: 5px 5px 0 rgba(0,0,0,0.6); border-color: var(--gold); color: var(--gold-light); }
+.choice-btn:active:not(:disabled) { transform: translate(1px,1px); }
+.choice-btn:disabled { opacity: 0.3; cursor: default; }
+.choice-key { color: var(--gold); min-width: 18px; font-size: 9px; }
+.choice-txt { flex: 1; }
+.choice-hints { font-size: 6px; color: var(--muted); text-align: right; white-space: nowrap; line-height: 2; }
+.h-pos { color: #6dbf9e; } .h-neg { color: #e07070; }
+
+/* ── SCENE INTRO LABEL ── */
+.scene-label { font-family: var(--pixel); font-size: 6px; color: var(--muted); letter-spacing: 2px; margin-bottom: 8px; }
+
+/* ── ENDING ── */
+#ending-screen { display: none; }
+.ending-wrap { text-align: center; padding: 28px 20px; }
+.e-type-badge { font-family: var(--pixel); font-size: 7px; letter-spacing: 3px; padding: 6px 16px; display: inline-block; margin-bottom: 18px; border: 2px solid; }
+.badge-heroico    { color: var(--gold);         border-color: var(--gold);         background: rgba(201,168,76,0.1); }
+.badge-tragico    { color: var(--blood-light);  border-color: var(--blood-light);  background: rgba(139,26,26,0.15); }
+.badge-misterioso { color: var(--magic-light);  border-color: var(--magic-light);  background: rgba(74,32,128,0.2); }
+.badge-neutro     { color: var(--muted);        border-color: var(--muted);        background: rgba(122,106,74,0.1); }
+
+.e-title { font-family: var(--pixel); font-size: clamp(10px,3vw,15px); color: var(--gold-light); text-shadow: 2px 2px 0 var(--blood); line-height: 1.6; margin-bottom: 20px; letter-spacing: 1px; }
+.e-text { font-family: var(--body); font-size: 15px; color: var(--parchment); line-height: 1.8; max-width: 540px; margin: 0 auto 14px; text-align: left; }
+.e-moral { font-family: var(--body); font-size: 13px; font-style: italic; color: var(--muted); max-width: 460px; margin: 0 auto 22px; }
+.e-stats { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; padding: 12px; border-top: 1px solid #333; border-bottom: 1px solid #333; margin-bottom: 22px; }
+.e-stat { font-family: var(--pixel); font-size: 7px; text-align: center; color: var(--muted); line-height: 1.8; }
+.e-stat strong { color: var(--parchment); display: block; font-size: 13px; }
+.e-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.e-history { margin: 16px 0; text-align: left; }
+.e-history-title { font-family: var(--pixel); font-size: 7px; color: var(--muted); letter-spacing: 2px; margin-bottom: 10px; }
+.e-history-item { font-family: var(--body); font-size: 12px; color: #aaa; line-height: 1.6; padding: 4px 0; border-bottom: 1px solid #222; }
+.e-history-item span { color: var(--parchment2); }
+
+/* ── GALLERY ── */
+#gallery-screen { display: none; }
+.gal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+.gal-title { font-family: var(--pixel); font-size: 10px; color: var(--gold); letter-spacing: 2px; }
+.gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 10px; }
+.gal-card { background: var(--ink-light); border: 2px solid var(--border); padding: 13px 11px; position: relative; }
+.gal-card.locked { opacity: 0.28; filter: grayscale(1); }
+.gc-type { font-family: var(--pixel); font-size: 6px; letter-spacing: 2px; margin-bottom: 7px; }
+.gc-title { font-family: var(--pixel); font-size: 7px; color: var(--parchment); line-height: 1.6; margin-bottom: 5px; }
+.gc-hero { font-family: var(--pixel); font-size: 6px; color: var(--muted); margin-bottom: 3px; }
+.gc-date { font-family: var(--pixel); font-size: 5px; color: #444; }
+.gc-lock { position: absolute; top: 10px; right: 10px; font-size: 16px; opacity: 0.5; }
+.gal-empty { font-family: var(--pixel); font-size: 8px; color: var(--muted); text-align: center; padding: 40px; line-height: 2.5; grid-column: 1/-1; }
+.gal-count { font-family: var(--pixel); font-size: 7px; color: var(--muted); text-align: center; margin-top: 14px; }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  font-family: var(--pixel); font-size: 7px; background: var(--ink);
+  border: 2px solid var(--gold); color: var(--gold); padding: 10px 20px;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.8); opacity: 0; pointer-events: none;
+  white-space: nowrap; transition: opacity 0.3s; z-index: 300;
+}
+#toast.show { opacity: 1; }
+
+/* ── MUSIC BTN ── */
+#music-btn {
+  position: fixed; top: 14px; right: 14px; z-index: 50;
+  font-family: var(--pixel); font-size: 7px; padding: 7px 11px;
+  background: var(--ink); border: 2px solid var(--border); color: var(--muted); cursor: pointer;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.6);
+}
+#music-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── SAVE DOT ── */
+.save-dot { display: inline-block; width: 7px; height: 7px; background: var(--forest-light); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+<button id="music-btn" onclick="toggleMusic()">♪ SOM</button>
+<div id="toast"></div>
+
+<div id="app">
+
+  <!-- TITLE -->
+  <div id="title-screen">
+    <span class="pixel-dragon">🐉</span>
+    <div class="game-logo">CRÔNICAS<br><span>DO</span><br>DESTINO</div>
+    <div class="game-sub">:: RPG OFFLINE · 22 FINAIS ÚNICOS ::</div>
+    <div class="ts-grid">
+      <button class="px-btn primary" onclick="openNewGame()">▶ NOVA JORNADA</button>
+      <button class="px-btn" id="cont-btn" onclick="continueGame()">⟳ CONTINUAR</button>
+      <button class="px-btn" onclick="showGallery()">🏆 GALERIA</button>
+      <button class="px-btn" onclick="openModal('credits-modal')">✦ CRÉDITOS</button>
+    </div>
+    <div class="ver">v2.0 · ZERO API · 100% OFFLINE · FEITO COM ♥</div>
+  </div>
+
+  <!-- NEW GAME MODAL -->
+  <div class="overlay" id="new-game-modal" style="display:none;">
+    <div class="modal">
+      <div class="modal-title">◈ NOVA JORNADA ◈</div>
+      <div class="modal-lbl">NOME DO HERÓI</div>
+      <input class="px-input" id="hero-input" type="text" maxlength="20" placeholder="Digite seu nome..." />
+      <div class="modal-lbl">CENÁRIO</div>
+      <div class="genre-grid" id="genre-grid">
+        <div class="genre-card sel" data-g="fantasia" onclick="selGenre(this)"><span class="genre-icon">⚔️</span>FANTASIA<br><span style="font-size:5px;color:#888">Magia e Dragões</span></div>
+        <div class="genre-card" data-g="cyberpunk"  onclick="selGenre(this)"><span class="genre-icon">🤖</span>CYBERPUNK<br><span style="font-size:5px;color:#888">Neons e Hackers</span></div>
+        <div class="genre-card" data-g="horror"     onclick="selGenre(this)"><span class="genre-icon">👁️</span>HORROR<br><span style="font-size:5px;color:#888">Trevas e Segredos</span></div>
+        <div class="genre-card" data-g="western"    onclick="selGenre(this)"><span class="genre-icon">🤠</span>FAROESTE<br><span style="font-size:5px;color:#888">Duelos e Honra</span></div>
+      </div>
+      <div class="modal-row">
+        <button class="px-btn" onclick="closeModal('new-game-modal')">✕ CANCELAR</button>
+        <button class="px-btn primary" onclick="startGame()">▶ COMEÇAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREDITS MODAL -->
+  <div class="overlay" id="credits-modal" style="display:none;">
+    <div class="modal" style="text-align:center;">
+      <div class="modal-title">✦ CRÉDITOS ✦</div>
+      <div style="font-family:var(--pixel);font-size:7px;color:var(--muted);line-height:3.2;margin-bottom:20px;">
+        DESIGN & DESENVOLVIMENTO<br><span style="color:var(--gold)">CLAUDE AI</span><br><br>
+        NARRATIVA & ROTEIRO<br><span style="color:var(--gold)">ESCRITA ORIGINAL · 4 CENÁRIOS</span><br><br>
+        TRILHA SONORA<br><span style="color:var(--gold)">WEB AUDIO API PROCEDURAL</span><br><br>
+        22 FINAIS ÚNICOS<br><span style="color:var(--gold)">100% OFFLINE · SEM API</span>
+      </div>
+      <button class="px-btn" onclick="closeModal('credits-modal')">← VOLTAR</button>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud" class="pbox">
+    <div class="hud-top">
+      <div>
+        <span class="hud-name" id="hud-name">HERÓI</span>
+        <span class="hud-genre" id="hud-genre">FANTASIA</span>
+      </div>
+      <div class="hud-right">
+        <span class="save-dot" id="save-dot" style="display:none;" title="Salvo"></span>
+        <span class="hud-turn" id="hud-turn">CENA 1/8</span>
+        <button class="px-btn" style="font-size:6px;padding:5px 10px;" onclick="confirmQuit()">✕ SAIR</button>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-block">
+        <div class="stat-lbl">❤ VIDA</div>
+        <div class="stat-val hp" id="s-hp">100</div>
+        <div class="bar-bg"><div class="bar-fill bar-hp" id="b-hp" style="width:100%"></div></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-lbl">✦ MAGIA</div>
+        <div class="stat-val mp" id="s-mp">50</div>
+        <div class="bar-bg"><div class="bar-fill bar-mp" id="b-mp" style="width:50%"></div></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-lbl">⚔ FORÇA</div>
+        <div class="stat-val str" id="s-str">30</div>
+        <div class="bar-bg"><div class="bar-fill bar-str" id="b-str" style="width:30%"></div></div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-lbl">♦ CARISMA</div>
+        <div class="stat-val kar" id="s-kar">30</div>
+        <div class="bar-bg"><div class="bar-fill bar-kar" id="b-kar" style="width:30%"></div></div>
+      </div>
+    </div>
+    <div class="inv-row">
+      <span class="inv-lbl">INVENTÁRIO:</span>
+      <span id="inv-display"><span class="inv-chip">VAZIO</span></span>
+    </div>
+  </div>
+
+  <!-- SCENE LABEL -->
+  <div class="scene-label" id="scene-label" style="display:none;"></div>
+
+  <!-- STORY -->
+  <div id="story-wrap">
+    <div class="story-panel">
+      <div class="story-text" id="story-text"></div>
+    </div>
+  </div>
+
+  <!-- CHOICES -->
+  <div id="choices-wrap"></div>
+
+  <!-- ENDING -->
+  <div id="ending-screen" class="pbox">
+    <div class="ending-wrap">
+      <div id="e-badge" class="e-type-badge badge-heroico">✦ FINAL HEROICO ✦</div>
+      <div id="e-title" class="e-title"></div>
+      <div id="e-text" class="e-text"></div>
+      <div id="e-moral" class="e-moral"></div>
+      <div class="e-stats" id="e-stats"></div>
+      <div class="e-history" id="e-history"></div>
+      <div class="e-btns">
+        <button class="px-btn primary" onclick="goTitle()">▶ JOGAR NOVAMENTE</button>
+        <button class="px-btn" onclick="showGallery()">🏆 GALERIA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GALLERY -->
+  <div id="gallery-screen" class="pbox">
+    <div class="gal-header">
+      <div class="gal-title">🏆 GALERIA</div>
+      <button class="px-btn" style="font-size:6px;padding:6px 12px;" onclick="goTitle()">← VOLTAR</button>
+    </div>
+    <div class="gal-grid" id="gal-grid"></div>
+    <div class="gal-count" id="gal-count"></div>
+  </div>
+
+</div><!-- #app -->
+
+<script>
+// ═══════════════════════ INLINE DATA ═══════════════════════
+const ENDINGS = [
+  { id:'lenda',       title:'O Herói Lendário',       type:'heroico',    emoji:'👑', color:'#c9a84c',
+    cond: s => s.hp>=70 && s.str>=60 && s.kar>=60,
+    text: 'Os bardos cantarão seu nome por gerações. Com a espada erguida sobre as ruínas do mal derrotado, você olhou para o povo que te aclamava — guerreiro, sábio e justo. Nenhum reino ousará desafiar sua lenda. Você não era apenas um herói. Era a esperança feita carne.' },
+  { id:'arquimago',   title:'O Arquimago Supremo',     type:'heroico',    emoji:'🔮', color:'#7b52d9',
+    cond: s => s.mp>=75 && s.str<45,
+    text: 'A Torre dos Antigos abriu suas portas somente para você. Seus dedos traçam runas que dobram a realidade, sua mente contém segredos que civilizações inteiras esqueceram. O poder que você acumulou transcende qualquer espada ou exército — você reescreve as leis do mundo.' },
+  { id:'rei',         title:'O Rei Diplomata',         type:'heroico',    emoji:'⚜️', color:'#185FA5',
+    cond: s => s.kar>=70 && s.hp>=50,
+    text: 'Sem derramar sangue desnecessário, você unificou o que parecia impossível unir. Sua voz dobrou tiranos, sua presença converteu inimigos em aliados. O trono que ocupa não foi conquistado pela força — foi oferecido por um povo que finalmente encontrou alguém digno de liderar.' },
+  { id:'guerreiro',   title:'O Guerreiro Imortal',     type:'heroico',    emoji:'⚔️', color:'#D85A30',
+    cond: s => s.str>=70 && s.hp>=60 && s.mp<40,
+    text: 'Eles tentaram dobrar você em batalha após batalha — e fracassaram. Cada cicatriz é um troféu, cada inimigo derrotado um capítulo de uma saga que nunca terá fim. Seu nome ecoa nos campos de batalha como um aviso aos fracos e uma promessa aos oprimidos: o guerreiro sempre volta.' },
+  { id:'anjo',        title:'O Anjo da Redenção',      type:'heroico',    emoji:'✨', color:'#2e8b57',
+    cond: s => s.hp>=80 && s.kar>=55 && s.mp>=55,
+    text: 'Você poderia ter escolhido o poder. Poderia ter escolhido a glória solitária. Em vez disso, escolheu salvar — cada vida, cada alma perdida que cruzou seu caminho. O mundo não te lembra como um conquistador, mas como a luz que chegou quando tudo parecia escuridão.' },
+  { id:'equilibrio',  title:'O Mestre do Equilíbrio',  type:'heroico',    emoji:'⚖️', color:'#BA7517',
+    cond: s => Math.abs(s.str-s.mp)<15 && Math.abs(s.mp-s.kar)<15 && s.hp>=50,
+    text: 'Onde outros escolheram um caminho, você trilhou todos. Nem puramente mago, nem puramente guerreiro, nem puramente diplomata — você é a síntese rara de tudo que um herói pode ser. Os antigos chamavam esse estado de Harmonia Perfeita. Poucos a alcançam. Você alcançou.' },
+  { id:'libertador',  title:'O Libertador do Povo',    type:'heroico',    emoji:'🔓', color:'#0C7C59',
+    cond: s => s.kar>=75,
+    text: 'Eles estavam acorrentados — pelo medo, pela tirania, pelo desespero. Você chegou sem exércitos, apenas com palavras que cortavam mais fundo que qualquer lâmina. Um por um, os grilhões caíram. O povo livre que marcha atrás de você é seu único troféu, e o mais valioso de todos.' },
+  { id:'sombra',      title:'O Guardião das Sombras',  type:'misterioso', emoji:'🌑', color:'#534AB7',
+    cond: s => s.mp>=60 && s.kar>=50 && s.hp<60,
+    text: 'Você opera nas margens do mundo visível, onde heróis comuns não ousam entrar. Ferido mas incansável, você usa magia e persuasão para manipular os fios do destino antes que o mal sequer perceba que foi derrotado. Ninguém sabe seu nome. Todos estão vivos por sua causa.' },
+  { id:'oraculo',     title:'O Oráculo Eterno',        type:'misterioso', emoji:'👁️', color:'#3C3489',
+    cond: s => s.mp>=80,
+    text: 'A magia consumiu sua humanidade — e em troca deu algo maior. Você enxerga o que foi, o que é e o que será. Os reis te temem. Os sábios te consultam em segredo. Você não pertence mais a nenhuma era — é a voz que sussurra verdades impossíveis entre os séculos.' },
+  { id:'foragido',    title:'O Foragido Lendário',     type:'misterioso', emoji:'🌫️', color:'#666460',
+    cond: s => s.str>=40 && s.hp<45 && s.kar>=40,
+    text: 'Ferido demais para sentar em tronos, sábio demais para ser capturado. Você desapareceu nas bordas do mundo conhecido, e sua ausência se tornou um mito mais poderoso que qualquer presença. Dizem que ainda aparece quando o perigo é grande o bastante. Dizem muita coisa.' },
+  { id:'espectro',    title:'O Espírito Vingativo',    type:'misterioso', emoji:'👻', color:'#26215C',
+    cond: s => s.hp<=20 && s.mp>=50,
+    text: 'Seu corpo não resistiu — mas sua vontade sim. Alimentada por magia e por uma raiva justa, sua essência persiste onde nenhum mortal deveria. Você assombra os culpados, protege os inocentes e desafia a própria morte. Entre os vivos e os mortos, você encontrou um terceiro caminho.' },
+  { id:'ermitao',     title:'O Ermitão Sábio',         type:'neutro',     emoji:'🏔️', color:'#0F6E56',
+    cond: s => s.mp>=55 && s.kar<40 && s.str<40,
+    text: 'O mundo ofereceu poder e glória — você recusou os dois. No alto de uma montanha que nenhum mapa registra, você acumulou um conhecimento que nenhuma biblioteca contém. Raros peregrinos chegam até você. Os que chegam, nunca partem os mesmos.' },
+  { id:'mercenario',  title:'O Mercenário Lendário',   type:'neutro',     emoji:'💰', color:'#633806',
+    cond: s => s.str>=45 && s.kar>=45 && s.hp<50,
+    text: 'Você sobreviveu fazendo o que precisava ser feito, por quem pagasse mais — mas nunca vendeu sua alma completamente. No final, com o bolso cheio e o corpo marcado, você olha para trás e vê uma trilha de problemas resolvidos. Não é uma lenda. É uma vida honesta, à sua maneira.' },
+  { id:'exilado',     title:'O Exilado Glorioso',      type:'neutro',     emoji:'🌅', color:'#5F5E5A',
+    cond: s => s.str>=50 && s.kar<35 && s.hp>=40,
+    text: 'Você era poderoso demais para ser ignorado e inconveniente demais para ser tolerado. O exílio que te impuseram você transformou em liberdade. Além das fronteiras conhecidas, onde nenhuma lei te alcança, você construiu algo que nenhum reino pode oferecer: uma vida verdadeiramente sua.' },
+  { id:'viajante',    title:'O Viajante Solitário',    type:'neutro',     emoji:'🗺️', color:'#888780',
+    cond: s => true,
+    text: 'Nem herói nem vilão, nem sábio nem guerreiro — você foi simplesmente alguém que seguiu em frente. A jornada te moldou sem te definir. Há dignidade nisso: no horizonte que você persegue sem jamais alcançar, e nas histórias que carrega sem jamais contar a ninguém.' },
+  { id:'martir',      title:'O Mártir Sagrado',        type:'tragico',    emoji:'🕯️', color:'#993C1D',
+    cond: s => s.hp<=30 && s.kar>=55,
+    text: 'Você sabia que não voltaria, e foi assim mesmo. O povo que você salvou nunca entendeu completamente o que foi sacrificado por eles. Ergueram uma estátua no lugar onde você caiu. Estátuas não sangram. Mas às vezes, nas noites mais frias, dizem que a pedra fica quente.' },
+  { id:'sacrificio',  title:'O Grande Sacrifício',     type:'tragico',    emoji:'🩸', color:'#993556',
+    cond: s => s.kar>=60 && s.hp<=25,
+    text: 'No momento decisivo, você viu claramente: era você ou tudo o mais. Sem hesitar — e isso é o que define um herói de verdade — você escolheu o resto. A vitória que o mundo celebra tem um custo que só você pagou. Ninguém disse que era justo. Apenas necessário.' },
+  { id:'traidor',     title:'O Traidor Coroado',       type:'tragico',    emoji:'🗡️', color:'#A32D2D',
+    cond: s => s.kar>=65 && s.str<30 && s.mp<30,
+    text: 'Suas palavras sempre foram mais afiadas que qualquer lâmina. No final, você usou esse dom para garantir sua própria sobrevivência — e destruiu tudo que dizia proteger. O trono que ocupa é real. O vazio que sente ao sentar nele também.' },
+  { id:'berserker',   title:'O Berserker Caído',       type:'tragico',    emoji:'💀', color:'#791F1F',
+    cond: s => s.str>=65 && s.hp<=35,
+    text: 'A raiva foi sua arma e sua sentença. Você venceu cada batalha até que o corpo simplesmente não pôde mais. Caiu como uma árvore centenária — barulhento, inevitável, impressionante. Seus inimigos te temem até agora. Que não seja pouca coisa.' },
+  { id:'demonio',     title:'O Demônio Despertado',    type:'tragico',    emoji:'😈', color:'#501313',
+    cond: s => s.str>=60 && s.mp>=60 && s.kar<30,
+    text: 'Poder demais sem compaixão suficiente — essa é a receita de um monstro. Você não percebeu quando cruzou a linha. Provavelmente não importava. O que você é agora assombra os pesadelos de gerações, e dentro de você, em algum lugar muito fundo, algo ainda se lembra de ter sido diferente.' },
+  { id:'corrupto',    title:'O Poder Corrompido',      type:'tragico',    emoji:'🖤', color:'#72243E',
+    cond: s => s.str>=55 && s.mp>=55 && s.hp<50,
+    text: 'Você começou querendo salvar o mundo. Em algum ponto, salvar o mundo virou controlar o mundo. E controlar virou algo mais sombrio ainda. O poder que você acumulou é real — e real também é o rastro de cinzas que deixou para chegar até ele.' },
+  { id:'amaldicoado', title:'O Amaldiçoado',           type:'tragico',    emoji:'⛓️', color:'#4A1B0C',
+    cond: s => s.hp<=15,
+    text: 'Cada escolha te custou algo. No final, o preço foi tudo. Mas há uma estranha paz em ter chegado tão longe com tão pouco sobrando. Você foi além do que qualquer um esperava. Isso não muda o que aconteceu — mas talvez mude o que isso significa.' },
+];
+
+const EP = ['lenda','anjo','oraculo','libertador','rei','arquimago','guerreiro','equilibrio','sombra','foragido','mercenario','ermitao','exilado','sacrificio','martir','demonio','espectro','berserker','corrupto','traidor','amaldicoado','viajante'];
+
+function resolveEnding(s) {
+  for (const id of EP) { const e = ENDINGS.find(x=>x.id===id); if(e&&e.cond(s)) return e; }
+  return ENDINGS.find(e=>e.id==='viajante');
+}
+
+// ═══════════════════════ SCENARIOS ═══════════════════════
+const SCENARIOS = {
+fantasia: { name:'Fantasia', icon:'⚔️',
+  intro:'O reino de Valdrun está à beira do colapso. O Rei-Dragão Malachar desperta após mil anos de sono, e sua sombra já cobre as cidades do norte. Você é um aventureiro sem nome — mas o destino raramente pede permissão.',
+  scenes:[
+    { text:'Na entrada da cidade de Kael, guardas bloqueiam o portão. Um cartaz com sua silhueta — alguém te delatou. Ao fundo, uma criança sozinha chora perto dos muros. O capitão da guarda avança em sua direção.', choices:[
+      { text:'Enfrentar os guardas na força', out:'Você abre caminho na base do punho — mas sangra pelo esforço.', sc:{str:12,hp:-15}, item:null },
+      { text:'Usar um feitiço de ilusão para passar invisível', out:'A magia funciona perfeitamente — você cruza o portão como névoa.', sc:{mp:15,hp:5}, item:'Pergaminho Rúnico' },
+      { text:'Ajudar a criança e ganhar a simpatia do capitão', out:'O capitão era pai. Ele faz vista grossa — e ainda te dá uma dica.', sc:{kar:15,hp:5}, item:null },
+    ]},
+    { text:'Na estalagem do Grifo Bêbado, um anão bêbado grita que sabe onde fica o Escudo de Arveth — artefato capaz de repelir o fogo do Rei-Dragão. Mas um grupo de mercenários ouviu a mesma coisa e já se levanta da mesa.', choices:[
+      { text:'Nocautear os mercenários antes que ajam', out:'Mesa quebrada, dentes no chão, informação garantida.', sc:{str:10,hp:-10,kar:-5}, item:'Punho de Ferro' },
+      { text:'Lançar sono mágico sobre os mercenários', out:'Eles roncarão até o amanhecer. O anão conta tudo entre risadas.', sc:{mp:12}, item:null },
+      { text:'Comprar uma rodada de bebidas e negociar', out:'Você e os mercenários agora são aliados temporários — e têm o mapa.', sc:{kar:15}, item:'Mapa das Ruínas' },
+    ]},
+    { text:'As Ruínas de Arveth são uma armadilha viva. Golens de pedra guardam a entrada, e a magia do lugar ressoa com algo antigo e faminto. No centro, o Escudo brilha num altar cercado de armadilhas.', choices:[
+      { text:'Destruir os golens pelo caminho', out:'Pedra e sangue. Você pega o Escudo com as mãos abertas.', sc:{str:15,hp:-18}, item:'Escudo de Arveth' },
+      { text:'Decifrar os glifos e desativar as armadilhas', out:'Cada runa silenciada abre um caminho. O Escudo é seu sem um arranhão.', sc:{mp:18,hp:8}, item:'Escudo de Arveth' },
+      { text:'Conversar com o espírito guardião do local', out:'O espírito estava esperando alguém digno. Ele entrega o Escudo de bom grado.', sc:{kar:18,mp:5}, item:'Escudo de Arveth' },
+    ]},
+    { text:'Na aldeia de Mireth, refugiados do norte trazem notícias terríveis. Uma anciã, ex-conselheira do rei morto, revela que Malachar tem um ponto fraco: o Cristal de Alma que ele carrega no peito. Mas chegar até ele exige atravessar o Pântano dos Perdidos.', choices:[
+      { text:'Partir imediatamente, sem descanso', out:'Você avança sem parar — os monstros do pântano aprendem a te temer.', sc:{str:10,hp:-12,kar:-5}, item:null },
+      { text:'Estudar os manuscritos da anciã primeiro', out:'Três dias de leitura revelam um caminho seguro e um feitiço de proteção.', sc:{mp:15,hp:5}, item:'Manuscrito Antigo' },
+      { text:'Organizar os refugiados e liderar uma caravana', out:'Vocês atravessam juntos. A força do grupo repele os predadores.', sc:{kar:12,hp:8}, item:null },
+    ]},
+    { text:'No coração do Pântano dos Perdidos, uma feiticeira aprisionada numa gaiola de luz te oferece um trato: ela te guia até Malachar em troca de liberdade. Seu passado é sombrio — mas ela parece sincera.', choices:[
+      { text:'Destruir a gaiola e deixá-la livre de graça', out:'Você liberta sem exigir nada. Ela chora e jura lealdade verdadeira.', sc:{kar:20,hp:-5}, item:null },
+      { text:'Aceitar o trato com um feitiço de vínculo mágico', out:'O vínculo garante a lealdade dela — e te ensina algo sobre magia antiga.', sc:{mp:15,kar:5}, item:'Amuleto do Vínculo' },
+      { text:'Recusar e seguir sozinho pelo pântano', out:'Você sobrevive pela força bruta, mas chega exausto e ensanguentado.', sc:{str:10,hp:-20}, item:null },
+    ]},
+    { text:'Nas muralhas da Cidadela de Fogo, o general leal a Malachar oferece rendição — em troca de que você entregue seus companheiros como escravos. Atrás dele, mil soldados esperam ordem.', choices:[
+      { text:'Atacar o general na frente de todos', out:'Ele cai. O exército hesita. A brecha é aberta no sangue.', sc:{str:18,hp:-15,kar:-8}, item:null },
+      { text:'Lançar um feitiço de confusão em massa', out:'O exército vira contra si mesmo por tempo suficiente para você avançar.', sc:{mp:20,hp:5}, item:null },
+      { text:'Discursar e convencer os soldados a se rebelar', out:'Metade do exército joga as armas no chão. A cidadela se rende sem batalha.', sc:{kar:20,hp:10}, item:'Selo do General' },
+    ]},
+    { text:'No salão do trono, o Cristal de Alma de Malachar flutua exposto — uma armadilha óbvia. O Rei-Dragão ri enquanto três ilusões suas cercam você. Um erro significa a morte.', choices:[
+      { text:'Atacar todas as ilusões até achar o real', out:'Você sangra em três lugares — mas o golpe final acerta o verdadeiro Malachar.', sc:{str:15,hp:-18}, item:null },
+      { text:'Usar magia para revelar qual é o real', out:'A runa de revelação desfaz as ilusões. Malachar, exposto, recua.', sc:{mp:18,hp:5}, item:null },
+      { text:'Ignorar as ilusões e ir direto ao Cristal', out:'Você apostou que o Cristal era o ponto fraco — e apostou certo.', sc:{kar:10,mp:10,hp:-8}, item:null },
+    ]},
+    { text:'Malachar está enfraquecido, o Cristal de Alma rachado em suas mãos. Ele implora por misericórdia — diz que foi amaldiçoado, que não escolheu isso. Há verdade em seus olhos. E há cidades em chamas lá fora.', choices:[
+      { text:'Destruir o Cristal e acabar com Malachar', out:'O Rei-Dragão cai. O fogo se apaga. O reino chora e comemora ao mesmo tempo.', sc:{str:10,hp:-5}, item:null },
+      { text:'Usar um feitiço de selamento para prendê-lo', out:'Você sela a maldição dentro de uma esfera. Malachar dorme. O mundo respira.', sc:{mp:15,hp:8}, item:'Esfera do Selamento' },
+      { text:'Negociar um tratado e poupar sua vida', out:'Malachar, redimido, usa seu poder para reconstruir o que destruiu.', sc:{kar:20,hp:10}, item:null },
+    ]},
+  ]
+},
+cyberpunk: { name:'Cyberpunk', icon:'🤖',
+  intro:'Neo-Valdrun, 2087. A MegaCorp Axiom controla tudo: água, ar, dados, sonhos. Você é um ghost — sem chip de identidade, sem registro, sem existência oficial. Isso te torna invisível. Isso te torna perigoso.',
+  scenes:[
+    { text:'Um drone da Axiom escaneou seu rosto no beco do Setor 9. Em quinze segundos chegam agentes. Uma garota com olhos de neônio te puxa para uma passagem secreta — mas exige pagamento em dados roubados.', choices:[
+      { text:'Destruir o drone e correr pelos telhados', out:'Você some antes dos agentes chegarem — mas alerta a rede deles.', sc:{str:12,hp:-10}, item:null },
+      { text:'Hackear o drone e apagar o registro do scan', out:'Trinta segundos de código. O drone segue em frente como se você não existisse.', sc:{mp:15,hp:5}, item:'Kit de Hacking' },
+      { text:'Convencer a garota a te ajudar de graça', out:'Ela viu algo em você. Diz que te ajuda — e que vai cobrar depois de outra forma.', sc:{kar:15}, item:null },
+    ]},
+    { text:'No Mercado Negro de Syn, você encontra Rael, ex-engenheiro da Axiom com a planta do servidor central. Ele quer dinheiro. Muitos agentes também estão procurando por ele.', choices:[
+      { text:'Intimidar Rael e pegar a planta à força', out:'Ele entrega tremendo. A planta é sua — e um inimigo permanente também.', sc:{str:12,kar:-8,hp:-5}, item:'Planta do Servidor' },
+      { text:'Hackear o implante neural de Rael e extrair os dados', out:'Invasão limpa. Ele nem percebe que você copiou tudo.', sc:{mp:18}, item:'Planta do Servidor' },
+      { text:'Oferecer proteção a Rael em troca da planta', out:'Ele aceita. Agora você tem um aliado com conhecimento interno da Axiom.', sc:{kar:15,hp:5}, item:'Planta do Servidor' },
+    ]},
+    { text:'O Distrito Zero é território da gangue Chrome Skull. Para chegar ao servidor da Axiom você precisa passar por aqui. A líder, com braços de titânio, bloqueia seu caminho pessoalmente.', choices:[
+      { text:'Enfrentar a líder em combate direto', out:'Titânio contra carne — mas você tem mais vontade. Ela recua com respeito.', sc:{str:15,hp:-18}, item:'Braçadeira Chrome' },
+      { text:'Usar pulso eletromagnético para desativar seus implantes', out:'Com os braços offline, ela é apenas humana. A gangue te deixa passar.', sc:{mp:15,hp:-5}, item:null },
+      { text:'Propor uma aliança contra a Axiom', out:'Você aperta a mão de titânio. A Chrome Skull tem 200 membros — todos seus agora.', sc:{kar:20}, item:'Emblema Chrome' },
+    ]},
+    { text:'Dentro do servidor, você descobre o Projeto Éden: um reset neural em massa planejado pela Axiom — apagar as memórias de toda a população e recomeçar do zero. O upload começa em 6 horas.', choices:[
+      { text:'Destruir fisicamente os servidores agora', out:'Explosões controladas. O projeto para. Metade da rede da Axiom também.', sc:{str:15,hp:-12}, item:null },
+      { text:'Hackear o sistema e reescrever o código do Éden', out:'Você passa quatro horas codificando um vírus que transforma o reset em liberação.', sc:{mp:20,hp:5}, item:'Código Éden' },
+      { text:'Vazar os arquivos para toda a mídia independente', out:'Em minutos, Éden é o nome mais buscado do planeta. A Axiom treme.', sc:{kar:18,mp:5}, item:null },
+    ]},
+    { text:'A CEO Dra. Voss aparece no seu feed neural. Ela sabe quem você é — e quem você foi. Oferece um cargo dentro da corporação: poder real, em troca de silêncio sobre o Projeto Éden.', choices:[
+      { text:'Recusar e ameaçar expô-la publicamente', out:'Voss desconecta. Agora você tem a corporação inteira como inimigo declarado.', sc:{str:8,kar:5,hp:-8}, item:null },
+      { text:'Fingir aceitar para obter acesso ao nível mais alto', out:'Você entra pela porta da frente. O que descobre lá dentro é ainda pior.', sc:{mp:12,kar:10}, item:'Crachá Executivo' },
+      { text:'Negociar: Éden cancelado em troca de silêncio', out:'Voss aceita. Você não confia nela. Mas Éden para — por enquanto.', sc:{kar:15,hp:8}, item:null },
+    ]},
+    { text:'No coração da torre, você encontra Kai — um garoto de 12 anos conectado como hub central do Projeto Éden. Ele é tanto a fonte quanto a vítima do sistema. Desligar o projeto significa desligar ele.', choices:[
+      { text:'Desligar o sistema à força, sem hesitar', out:'Você faz o que precisa ser feito. Kai fecha os olhos. O projeto para.', sc:{str:10,hp:-15,kar:-10}, item:null },
+      { text:'Hackear o sistema para extrair Kai antes de desligar', out:'Três horas de código, mãos tremendo. Kai acorda em carne e osso, confuso e vivo.', sc:{mp:20,hp:-8}, item:null },
+      { text:'Deixar Kai decidir o próprio destino', out:'O garoto ouviu tudo. Ele mesmo digita o shutdown. Depois pede seu nome.', sc:{kar:20,hp:5}, item:null },
+    ]},
+    { text:'Os agentes de elite da Axiom cercam o andar 99. Você tem 90 segundos para chegar à antena de transmissão no topo e encerrar o sinal de controle de vez. O elevador está travado.', choices:[
+      { text:'Subir pelas escadarias derrubando tudo', out:'Você chega. Chegam também oito agentes caídos nos degraus atrás de você.', sc:{str:15,hp:-15}, item:null },
+      { text:'Hackear o elevador com o chip de Rael', out:'O elevador obedece. Você sobe sem encontrar ninguém — elegante demais.', sc:{mp:15,hp:5}, item:null },
+      { text:'Convencer os agentes a virar contra Voss', out:'Você tinha 90 segundos. Usou 85 falando. Os 5 restantes foram suficientes.', sc:{kar:18,hp:8}, item:null },
+    ]},
+    { text:'No topo da torre, Voss espera com uma arma apontada — e um chip na outra mão. O chip é uma cópia de você. "Se você morrer aqui, ele vive e faz o que eu quiser." A antena pisca atrás dela.', choices:[
+      { text:'Avançar e destruir o chip, custando o que custar', out:'O chip explode. Voss atira. Você acerta a antena antes de cair.', sc:{str:12,hp:-20}, item:null },
+      { text:'Hackear o chip remotamente e corrompê-lo', out:'O chip implode na mão dela. Voss percebe que perdeu — e foge para o nada.', sc:{mp:20,hp:5}, item:null },
+      { text:'Convencer Voss de que ninguém precisa morrer hoje', out:'Ela hesita. Nesse segundo, você desliga a antena manualmente.', sc:{kar:18,hp:8}, item:null },
+    ]},
+  ]
+},
+horror: { name:'Horror', icon:'👁️',
+  intro:'A Mansão Velmoor existe em todos os mapas e em nenhum. Você chegou aqui porque foi convidado — ou porque algo te trouxe. Lá dentro, os corredores mudam, as portas mentem, e o que você encontrar depende do que você carrega por dentro.',
+  scenes:[
+    { text:'O portão da mansão se fecha sozinho atrás de você. Na entrada, um espelho enorme mostra seu reflexo — mas ele está um segundo atrasado. Do corredor da esquerda vem um choro. Do direito, uma luz quente e convidativa.', choices:[
+      { text:'Quebrar o espelho com força', out:'Sete anos de azar, dizem. O reflexo late ao cair. Mas o caminho está livre.', sc:{str:10,hp:-8}, item:'Estilhaço Encantado' },
+      { text:'Estudar o espelho em busca de pistas', out:'O atraso tem um padrão. O reflexo te mostra uma chave escondida na moldura.', sc:{mp:15,hp:5}, item:'Chave Velha' },
+      { text:'Ir até o choro — pode ser alguém precisando de ajuda', out:'Era uma criança. Era também um teste. Ela te entrega uma vela que nunca apaga.', sc:{kar:15,hp:5}, item:'Vela Eterna' },
+    ]},
+    { text:'Na biblioteca, os livros sussurram seu nome. Um tomo negro flutua até você — dentro, um ritual que promete poder absoluto sobre a mansão. Mas a tinta parece sangue fresco. Do outro lado da sala, uma janela de escape real pisca por um segundo.', choices:[
+      { text:'Arrancar as páginas do tomo e destrui-lo', out:'A biblioteca grita. Você resiste. O tomo cinza some.', sc:{str:8,hp:-10,mp:-5}, item:null },
+      { text:'Ler o ritual em voz baixa para entendê-lo', out:'Você absorve o conhecimento sem executar o ritual. Perigoso — e valioso.', sc:{mp:20,hp:-8}, item:'Tomo das Sombras' },
+      { text:'Ignorar o tomo e ir à janela de escape', out:'A janela era real. Mas te leva a outro cômodo da mansão, não para fora.', sc:{kar:10,hp:8}, item:null },
+    ]},
+    { text:'No quarto da criança morta, uma boneca de porcelana de olhos azuis te pede que conte uma história. Recusar seria rude. A última pessoa que a contrariou ainda está nas paredes — literalmente.', choices:[
+      { text:'Destruir a boneca antes que ela aja', out:'Porcelana estilhaçada, escuridão por trinta segundos, silêncio depois.', sc:{str:12,hp:-12}, item:null },
+      { text:'Contar uma história que prende a atenção dela', out:'Você narra por vinte minutos. Ela dorme. O quarto libera uma passagem secreta.', sc:{mp:15,kar:8}, item:'Passagem Revelada' },
+      { text:'Sentar com ela e perguntar o que ela quer', out:'A boneca queria ser ouvida. Ela te mostra o coração da mansão e seus segredos.', sc:{kar:18,hp:5}, item:'Mapa da Mansão' },
+    ]},
+    { text:'No porão, você encontra o Arquiteto — o homem que construiu Velmoor e foi consumido por ela. Ele está preso entre as paredes, ainda vivo, ainda lúcido. Ele sabe como destruir a mansão. Libertá-lo tem um custo.', choices:[
+      { text:'Arrancar o Arquiteto das paredes pela força', out:'Ossos estalam. Ele grita. Sobrevive — e te conta tudo antes de finalmente morrer.', sc:{str:10,hp:-15,kar:-5}, item:'Planta da Mansão' },
+      { text:'Usar magia para dissolver a parede ao redor dele', out:'A parede libera o Arquiteto devagar. Ele sai inteiro — e agradecido.', sc:{mp:18,hp:5}, item:'Planta da Mansão' },
+      { text:'Sentar e ouvir sua história completa primeiro', out:'O Arquiteto nunca foi ouvido. Com as palavras ditas, a parede o libera sozinha.', sc:{kar:18,mp:5}, item:'Planta da Mansão' },
+    ]},
+    { text:'O Salão dos Espelhos multiplica você ao infinito. Cada reflexo toma uma decisão diferente. Um deles avança em sua direção com uma faca. É você — mas não é você.', choices:[
+      { text:'Enfrentar o reflexo armado em combate', out:'Você derrota a versão de si que escolheu a violência — e absorve algo dela.', sc:{str:15,hp:-15}, item:null },
+      { text:'Fechar os olhos e invocar proteção mágica', out:'No escuro, os reflexos perdem poder. Quando você abre os olhos, só existe um.', sc:{mp:18,hp:-5}, item:null },
+      { text:'Estender a mão para o reflexo e falar com ele', out:'Ninguém nunca tentou isso. O reflexo para. Abaixa a faca. Desaparece em paz.', sc:{kar:20,hp:5}, item:null },
+    ]},
+    { text:'A Entidade que habita Velmoor finalmente mostra uma forma — uma silhueta de tudo que você mais teme. Ela não ataca. Ela simplesmente pergunta: "O que você veio buscar aqui?"', choices:[
+      { text:'Atacar a Entidade imediatamente, sem responder', out:'A luta é brutal e sem sentido. Você vence pelo puro instinto de sobreviver.', sc:{str:12,hp:-18}, item:null },
+      { text:'Responder com um feitiço de banimento', out:'As palavras de banimento funcionam — mas a Entidade ri enquanto some.', sc:{mp:15,hp:-8}, item:'Pergaminho de Banimento' },
+      { text:'Responder honestamente à pergunta dela', out:'A verdade te custa mais que qualquer luta. Mas a Entidade recua, satisfeita.', sc:{kar:20,hp:-5}, item:null },
+    ]},
+    { text:'O coração de Velmoor é uma sala onde o tempo não existe. Você vê todos os que vieram antes — cada um falhou de uma forma diferente. No centro, uma porta. Simples, comum, ordinária.', choices:[
+      { text:'Arrombar a porta com força bruta', out:'A porta cede ao terceiro chute. O que há do outro lado é estranhamente normal.', sc:{str:10,hp:-8}, item:null },
+      { text:'Decifrar o mecanismo oculto da fechadura', out:'A solução era elegante. A porta abre em silêncio, revelando o fim correto.', sc:{mp:15,hp:8}, item:null },
+      { text:'Pedir passagem à mansão com respeito', out:'A mansão nunca foi pedida assim. A porta se abre sozinha. Educação tem poder.', sc:{kar:18,hp:10}, item:null },
+    ]},
+    { text:'Do outro lado da porta está o criador da maldição — não um monstro, mas um homem velho e exausto que não consegue morrer enquanto a mansão existir. Ele te entrega um machado. "Você sabe o que precisa fazer."', choices:[
+      { text:'Usar o machado para destruir a pedra angular da mansão', out:'A mansão desmorona. O velho finalmente fecha os olhos com um sorriso.', sc:{str:15,hp:-10}, item:null },
+      { text:'Usar magia para desatar a maldição sem destruir tudo', out:'Você separa o homem da mansão. Ambos sobrevivem — livres.', sc:{mp:20,hp:5}, item:null },
+      { text:'Perguntar se ele quer ser salvo ou apenas ouvido', out:'Ele quebra a chorar. Quando para, a maldição se desfaz por si mesma.', sc:{kar:20,hp:8}, item:null },
+    ]},
+  ]
+},
+western: { name:'Faroeste', icon:'🤠',
+  intro:'Dusthaven, 1882. A cidade mais quente e mais fria do território — quente de sol, fria de sangue. O barão Colt Harrow controla tudo aqui com pistolas e subornos. Você chegou no trem das 11 sem bagagem e sem aliados. Isso vai mudar.',
+  scenes:[
+    { text:'Na plataforma da estação, dois capangas de Harrow verificam passageiros. Eles te notaram. Do outro lado da rua, o xerife local observa tudo sem mover um músculo. Uma senhora com malas pesadas luta sozinha na sarjeta.', choices:[
+      { text:'Encarar os capangas e passar sem baixar o olhar', out:'Sua postura fala antes de você. Os capangas decidem que não valem a briga.', sc:{str:12,kar:5,hp:-5}, item:null },
+      { text:'Observar o padrão de ronda e escorregar despercebido', out:'Você usa cada sombra como aliada. Eles nunca souberam que você passou.', sc:{mp:12,hp:5}, item:null },
+      { text:'Ajudar a senhora com as malas — ela agradece demais', out:'A "senhora" é a melhor informante de Dusthaven. Ela te conta tudo sobre Harrow.', sc:{kar:15,hp:5}, item:'Mapa de Dusthaven' },
+    ]},
+    { text:'No saloon do Cavalo Manco, um bêbado grita que tem prova de que Harrow assassinou o xerife anterior. O próprio barão está sentado no fundo, jogando cartas. Seus pistoleiros se levantam devagar.', choices:[
+      { text:'Chegar na frente dos pistoleiros e proteger o bêbado', out:'Você intercepta os pistoleiros. Navalha e punho. O bêbado escapa — e a prova também.', sc:{str:15,hp:-15,kar:5}, item:null },
+      { text:'Roubar as cartas de Harrow para criar confusão', out:'Um truque de mão rápido. Harrow perde a paciência com você — os outros escapam.', sc:{mp:12,kar:10}, item:'Carta Marcada' },
+      { text:'Levantar e falar no saloon inteiro — jogar a moral contra Harrow', out:'Cinquenta pares de olhos viram para Harrow. Ele recua. Por hoje.', sc:{kar:18,hp:5}, item:null },
+    ]},
+    { text:'O bêbado, sóbrio agora, revela que as provas estão no cofre do cartório — controlado por Pickney, um tabelião corrupto. Para entrar, você precisa de uma distração ou de força.', choices:[
+      { text:'Arrombar a porta dos fundos durante a noite', out:'A fechadura cede no segundo soluço. O cofre não é problema para quem sabe.', sc:{str:12,hp:-5}, item:'Documentos de Harrow' },
+      { text:'Forjar uma ordem judicial para Pickney', out:'Sua caligrafia é convincente. Pickney entrega tudo com um sorriso ansioso.', sc:{mp:15,hp:5}, item:'Documentos de Harrow' },
+      { text:'Convencer Pickney de que Harrow vai jogá-lo fora de qualquer jeito', out:'Você planta a semente da desconfiança. Pickney abre o cofre por conta própria.', sc:{kar:18}, item:'Documentos de Harrow' },
+    ]},
+    { text:'Com as provas em mãos, você procura o xerife. Mas ele está de joelhos na praça central — Harrow descobriu seus planos e pegou o filho do xerife como refém. Cem pessoas assistem em silêncio.', choices:[
+      { text:'Avançar em direção a Harrow com as mãos nas armas', out:'O faroeste tem uma linguagem própria. Harrow entende quando perdeu a iniciativa.', sc:{str:15,hp:-12,kar:5}, item:null },
+      { text:'Usar a multidão como cobertura para flanquear os capangas', out:'Você se move pela massa sem ser visto. Os capangas são neutralizados pelo flanco.', sc:{mp:15,hp:-5}, item:null },
+      { text:'Falar direto com o menino — dar a ele coragem para agir', out:'O garoto de dez anos ouviu. Pisou no pé do capanga. A praça explodiu em favor de vocês.', sc:{kar:20,hp:5}, item:null },
+    ]},
+    { text:'O xerife, liberto, quer ajudar — mas Harrow já mandou queimar as fazendas de todos que assinaram uma petição contra ele. As famílias estão nas chamas. O barão está na delegacia, rindo.', choices:[
+      { text:'Ir às fazendas ajudar a combater o fogo', out:'Suas mãos ficam com bolhas. Três famílias são salvas. A quarta não.', sc:{hp:-15,kar:15,str:5}, item:null },
+      { text:'Usar pólvora para criar um contra-fogo controlado', out:'Você conhece fogo. O contra-fogo para o avanço das chamas. Todos salvos.', sc:{mp:15,hp:-5}, item:null },
+      { text:'Organizar a comunidade para combater juntos', out:'Em dez minutos, toda Dusthaven estava em fila passando baldes. O fogo perdeu.', sc:{kar:18,hp:5}, item:'Confiança da Cidade' },
+    ]},
+    { text:'Harrow contratou o pistoleiro lendário Crow Decker para te eliminar. Decker te encontra no meio da rua principal ao pôr do sol. Ele é mais rápido que qualquer mortal. Você sabe disso.', choices:[
+      { text:'Aceitar o duelo — velocidade contra velocidade', out:'Você leva um tiro no ombro. Mas o seu acerta o lugar certo. Decker cai primeiro.', sc:{str:18,hp:-20}, item:'Revólver de Decker' },
+      { text:'Usar o sol nas costas como vantagem tática', out:'Decker piscou por meio segundo. Meio segundo foi suficiente.', sc:{mp:15,hp:-8}, item:'Revólver de Decker' },
+      { text:'Fazer Decker hesitar falando de sua filha', out:'Você sabia que ele tinha uma filha. A menção do nome custou-lhe o tempo de reação.', sc:{kar:18,hp:-5}, item:'Revólver de Decker' },
+    ]},
+    { text:'Com Decker caído, a cidade toda sai às ruas. Harrow está cercado na delegacia com seis capangas. O xerife tem uma ordem de prisão. Harrow ameaça explodir os barris de pólvora no porão.', choices:[
+      { text:'Invadir pela janela antes que ele execute a ameaça', out:'Vidro e fumaça. Você desarma Harrow antes que ele chegue perto dos barris.', sc:{str:15,hp:-12}, item:null },
+      { text:'Cortar o acesso ao porão por fora, deixando-o sem saída', out:'Harrow percebe que está encurralado. Rende-se com os dentes cerrados.', sc:{mp:15,hp:5}, item:null },
+      { text:'Negociar a rendição em troca de julgamento justo', out:'Você garante que ele seja julgado — não linchado. A lei vence de um jeito honesto.', sc:{kar:18,hp:8}, item:null },
+    ]},
+    { text:'Harrow está preso. A cidade está livre. O xerife te oferece o distintivo de delegado — e a responsabilidade que vem com ele. Lá fora, um cavalo te espera com as rédeas soltas. O próximo horizonte é só seu.', choices:[
+      { text:'Aceitar o distintivo e ficar em Dusthaven', out:'Você pendura o distintivo no peito. A cidade tem um protetor. Você tem um lar.', sc:{str:8,kar:10,hp:10}, item:'Distintivo de Xerife' },
+      { text:'Recusar e usar seu conhecimento para melhorar as leis locais', out:'Sem título, sem poder — mas com influência real nas regras que vão proteger todos.', sc:{mp:15,kar:8}, item:null },
+      { text:'Pegar o cavalo e seguir para o próximo lugar que precise de você', out:'Dusthaven te aplaude enquanto você cavalga. O horizonte está cheio de promessas.', sc:{kar:10,hp:12,str:5}, item:null },
+    ]},
+  ]
+},
+};
+
+// ═══════════════════════ STATE ═══════════════════════
+let G = {};
+
+function freshState(name, genre) {
+  return { heroName:name, genre, scene:0,
+    stats:{hp:100,mp:50,str:30,kar:30},
+    inventory:[], history:[], done:false };
+}
+
+// ═══════════════════════ SAVE / LOAD ═══════════════════════
+function saveGame() {
+  try { localStorage.setItem('cronicas2_save', JSON.stringify(G)); flashSave(); } catch(e){}
+}
+function loadSave() {
+  try { const r=localStorage.getItem('cronicas2_save'); return r?JSON.parse(r):null; } catch(e){return null;}
+}
+function clearSave() { try{localStorage.removeItem('cronicas2_save');}catch(e){} }
+function flashSave() {
+  const d=document.getElementById('save-dot'); d.style.display='inline-block';
+  setTimeout(()=>d.style.display='none',1500);
+}
+
+function getGallery() { try{return JSON.parse(localStorage.getItem('cronicas2_gallery')||'[]');}catch{return [];} }
+function addToGallery(ending) {
+  const gal=getGallery();
+  if(!gal.find(g=>g.endingId===ending.id)) {
+    gal.push({ endingId:ending.id, title:ending.title, type:ending.type, emoji:ending.emoji, color:ending.color,
+      heroName:G.heroName, genre:G.genre, date:new Date().toLocaleDateString('pt-BR') });
+    try{localStorage.setItem('cronicas2_gallery',JSON.stringify(gal));}catch(e){}
+  }
+}
+
+// ═══════════════════════ UI HELPERS ═══════════════════════
+function $id(id){return document.getElementById(id);}
+function show(id){$id(id).style.display='block';}
+function hide(id){$id(id).style.display='none';}
+function openModal(id){$id(id).style.display='flex';}
+function closeModal(id){$id(id).style.display='none';}
+
+let toastTimer;
+function toast(msg,dur=2500){
+  const t=$id('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function selGenre(el){
+  document.querySelectorAll('.genre-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); G.genre=el.dataset.g;
+}
+function openNewGame(){G.genre='fantasia'; openModal('new-game-modal');}
+function closeModal2(id){closeModal(id);}
+
+function updateHUD(){
+  const s=G.stats;
+  $id('s-hp').textContent=Math.max(0,s.hp);
+  $id('s-mp').textContent=Math.max(0,s.mp);
+  $id('s-str').textContent=s.str;
+  $id('s-kar').textContent=s.kar;
+  $id('b-hp').style.width=Math.max(0,Math.min(100,s.hp))+'%';
+  $id('b-mp').style.width=Math.max(0,Math.min(100,s.mp))+'%';
+  $id('b-str').style.width=Math.max(0,Math.min(100,s.str))+'%';
+  $id('b-kar').style.width=Math.max(0,Math.min(100,s.kar))+'%';
+  const sc=SCENARIOS[G.genre]; const total=sc?sc.scenes.length:8;
+  $id('hud-turn').textContent=`CENA ${Math.min(G.scene+1,total)}/${total}`;
+  const inv=$id('inv-display');
+  inv.innerHTML=G.inventory.length===0?'<span class="inv-chip">VAZIO</span>':G.inventory.map(i=>`<span class="inv-chip">${i}</span>`).join('');
+}
+
+// ═══════════════════════ TYPEWRITER ═══════════════════════
+let twTimer=null;
+function typewriter(el,text,speed,cb){
+  clearTimeout(twTimer); el.innerHTML='';
+  const cur=document.createElement('span'); cur.className='cursor'; el.appendChild(cur);
+  let i=0;
+  function tick(){
+    if(i<text.length){
+      cur.insertAdjacentText('beforebegin',text[i]);
+      const c=text[i]; i++;
+      const delay=c==='.'||c==='!'||c==='?'?speed*6:c===','?speed*3:speed;
+      twTimer=setTimeout(tick,delay); playType();
+    } else { cur.remove(); if(cb)cb(); }
+  }
+  tick();
+}
+
+// ═══════════════════════ AUDIO ═══════════════════════
+let aCtx=null, musicOn=false, mNodes=[];
+function getCtx(){if(!aCtx)aCtx=new(window.AudioContext||window.webkitAudioContext)();return aCtx;}
+function toggleMusic(){
+  musicOn=!musicOn;
+  const btn=$id('music-btn');
+  if(musicOn){btn.textContent='♪ SOM ●';btn.style.color='var(--gold)';startAmbience();}
+  else{btn.textContent='♪ SOM';btn.style.color='';stopAmbience();}
+}
+function startAmbience(){
+  stopAmbience(); const ctx=getCtx();
+  if(ctx.state==='suspended')ctx.resume();
+  const drone=ctx.createOscillator(),dg=ctx.createGain();
+  drone.type='sawtooth'; drone.frequency.value=55; dg.gain.value=0.025;
+  drone.connect(dg); dg.connect(ctx.destination); drone.start();
+  [110,165,220].forEach(f=>{
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='sine';o.frequency.value=f;g.gain.value=0.01;
+    o.connect(g);g.connect(ctx.destination);o.start();
+    mNodes.push(o,g);
+  });
+  const lfo=ctx.createOscillator(),lg=ctx.createGain();
+  lfo.frequency.value=0.12;lg.gain.value=0.006;
+  lfo.connect(lg);lg.connect(dg.gain);lfo.start();
+  mNodes.push(drone,dg,lfo,lg);
+  schedArp(ctx);
+}
+function schedArp(ctx){
+  const notes=[261,329,392,523,392,329]; let b=0;
+  function tick(){
+    if(!musicOn)return;
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='square';o.frequency.value=notes[b%notes.length]/2;
+    g.gain.setValueAtTime(0.02,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);
+    o.connect(g);g.connect(ctx.destination);
+    o.start(ctx.currentTime);o.stop(ctx.currentTime+0.4);
+    b++; setTimeout(tick,420);
+  }
+  setTimeout(tick,600);
+}
+function stopAmbience(){mNodes.forEach(n=>{try{n.stop?n.stop():n.disconnect();}catch(e){}});mNodes=[];}
+function playType(){
+  if(!musicOn)return;
+  try{
+    const ctx=getCtx(),o=ctx.createOscillator(),g=ctx.createGain();
+    o.type='square';o.frequency.value=700+Math.random()*300;
+    g.gain.setValueAtTime(0.012,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.03);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+0.03);
+  }catch(e){}
+}
+function playChoice(){
+  if(!musicOn)return;
+  try{
+    const ctx=getCtx();
+    [440,554,659].forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.frequency.value=f;
+      g.gain.setValueAtTime(0.05,ctx.currentTime+i*0.07);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.07+0.18);
+      o.connect(g);g.connect(ctx.destination);
+      o.start(ctx.currentTime+i*0.07);o.stop(ctx.currentTime+i*0.07+0.18);
+    });
+  }catch(e){}
+}
+function playEnding(type){
+  if(!musicOn)return;
+  try{
+    const ctx=getCtx();
+    const chords={heroico:[261,329,392,523],tragico:[220,261,311,415],misterioso:[233,277,370,466],neutro:[261,311,392,466]}[type]||[261,329,392,523];
+    chords.forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.value=f;
+      g.gain.setValueAtTime(0,ctx.currentTime+i*0.14);
+      g.gain.linearRampToValueAtTime(0.07,ctx.currentTime+i*0.14+0.18);
+      g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+i*0.14+2.5);
+      o.connect(g);g.connect(ctx.destination);
+      o.start(ctx.currentTime+i*0.14);o.stop(ctx.currentTime+i*0.14+2.5);
+    });
+  }catch(e){}
+}
+
+// ═══════════════════════ GAME FLOW ═══════════════════════
+function applyStats(sc){
+  if(!sc)return;
+  const s=G.stats;
+  s.hp =Math.min(100,Math.max(0,s.hp +(sc.hp ||0)));
+  s.mp =Math.min(100,Math.max(0,s.mp +(sc.mp ||0)));
+  s.str=Math.min(100,Math.max(0,s.str+(sc.str||0)));
+  s.kar=Math.min(100,Math.max(0,s.kar+(sc.kar||0)));
+}
+
+function renderScene(){
+  const sc=SCENARIOS[G.genre]; if(!sc)return;
+  if(G.scene>=sc.scenes.length){ showEnding(); return; }
+  const scene=sc.scenes[G.scene];
+
+  show('hud'); show('story-wrap'); show('choices-wrap');
+  hide('ending-screen'); hide('gallery-screen'); hide('title-screen');
+
+  const lbl=$id('scene-label');
+  lbl.style.display='block';
+  lbl.textContent=`◈ ${sc.name.toUpperCase()} · CENA ${G.scene+1} DE ${sc.scenes.length} ◈`;
+
+  updateHUD();
+
+  // story typewriter
+  const stEl=$id('story-text'); stEl.className='story-text loading'; stEl.textContent='';
+  setTimeout(()=>{
+    stEl.className='story-text';
+    typewriter(stEl, scene.text, 18, ()=> renderChoices(scene.choices));
+  }, 120);
+}
+
+function renderChoices(choices){
+  const wrap=$id('choices-wrap'); wrap.innerHTML='';
+  choices.forEach((ch,idx)=>{
+    const btn=document.createElement('button'); btn.className='choice-btn';
+    const sc=ch.sc||{};
+    const hints=[];
+    if(sc.hp &&sc.hp !==0)hints.push(`<span class="${sc.hp >0?'h-pos':'h-neg'}">${sc.hp >0?'+':''}${sc.hp} ❤</span>`);
+    if(sc.mp &&sc.mp !==0)hints.push(`<span class="${sc.mp >0?'h-pos':'h-neg'}">${sc.mp >0?'+':''}${sc.mp} ✦</span>`);
+    if(sc.str&&sc.str!==0)hints.push(`<span class="${sc.str>0?'h-pos':'h-neg'}">${sc.str>0?'+':''}${sc.str} ⚔</span>`);
+    if(sc.kar&&sc.kar!==0)hints.push(`<span class="${sc.kar>0?'h-pos':'h-neg'}">${sc.kar>0?'+':''}${sc.kar} ♦</span>`);
+    btn.innerHTML=`<span class="choice-key">[${idx+1}]</span><span class="choice-txt">${ch.text}</span><span class="choice-hints">${hints.join(' ')}</span>`;
+    btn.onclick=()=>pickChoice(ch);
+    wrap.appendChild(btn);
+  });
+}
+
+function pickChoice(ch){
+  document.querySelectorAll('.choice-btn').forEach(b=>b.disabled=true);
+  playChoice();
+  applyStats(ch.sc);
+  if(ch.item){const i=ch.item; if(!G.inventory.includes(i)){G.inventory.push(i);toast('⚔ Item obtido: '+i);}}
+  G.history.push({choice:ch.text,outcome:ch.out});
+  G.scene++;
+  updateHUD(); saveGame();
+  // brief pause then next scene
+  setTimeout(renderScene, 300);
+}
+
+function showEnding(){
+  const ending=resolveEnding(G.stats);
+  hide('hud'); hide('story-wrap'); hide('choices-wrap'); hide('title-screen');
+  $id('scene-label').style.display='none';
+  show('ending-screen');
+
+  const typeLabels={heroico:'✦ FINAL HEROICO ✦',tragico:'✝ FINAL TRÁGICO ✝',neutro:'◈ FINAL NEUTRO ◈',misterioso:'👁 FINAL MISTERIOSO 👁'};
+  const badge=$id('e-badge');
+  badge.textContent=typeLabels[ending.type]||'FINAL';
+  badge.className='e-type-badge badge-'+ending.type;
+  $id('e-title').textContent=ending.emoji+'  '+ending.title;
+  $id('e-text').textContent=ending.text;
+
+  // moral based on dominant stat
+  const s=G.stats; const dom=Object.entries(s).sort((a,b)=>b[1]-a[1])[0][0];
+  const morals={hp:'Sobreviver já é uma forma de vitória.',mp:'O conhecimento é a única arma que nunca embota.',str:'A força que dobra o mundo também pode quebrá-lo.',kar:'As palavras certas mudam mais do que qualquer exército.'};
+  $id('e-moral').textContent='« '+morals[dom]+' »';
+
+  const s2=G.stats;
+  $id('e-stats').innerHTML=`
+    <div class="e-stat"><strong style="color:var(--blood-light)">${Math.max(0,s2.hp)}</strong>VIDA</div>
+    <div class="e-stat"><strong style="color:var(--magic-light)">${s2.mp}</strong>MAGIA</div>
+    <div class="e-stat"><strong style="color:var(--gold)">${s2.str}</strong>FORÇA</div>
+    <div class="e-stat"><strong style="color:var(--forest-light)">${s2.kar}</strong>CARISMA</div>
+    ${G.inventory.length>0?`<div class="e-stat"><strong style="color:var(--parchment2);font-size:8px">${G.inventory.join(', ')}</strong>ITENS</div>`:''}
+  `;
+
+  // decision log
+  const histEl=$id('e-history');
+  if(G.history.length>0){
+    histEl.innerHTML=`<div class="e-history-title">◈ SUAS DECISÕES ◈</div>`+
+      G.history.map((h,i)=>`<div class="e-history-item"><span>[${i+1}] ${h.choice}</span> — ${h.outcome}</div>`).join('');
+  } else { histEl.innerHTML=''; }
+
+  playEnding(ending.type);
+  addToGallery(ending);
+  clearSave();
+  toast('🏆 Final desbloqueado: '+ending.title, 4000);
+}
+
+// ═══════════════════════ NAVIGATION ═══════════════════════
+function startGame(){
+  const name=$id('hero-input').value.trim();
+  if(!name){toast('Digite o nome do herói!');return;}
+  closeModal('new-game-modal');
+  G=freshState(name,'fantasia');
+  // pick genre from selected card
+  const sel=document.querySelector('.genre-card.sel');
+  if(sel)G.genre=sel.dataset.g;
+  $id('hud-name').textContent=name.toUpperCase();
+  $id('hud-genre').textContent=(SCENARIOS[G.genre]||{name:'?'}).name.toUpperCase();
+  renderScene();
+}
+
+function continueGame(){
+  const saved=loadSave();
+  if(!saved){toast('Nenhum save encontrado.');return;}
+  G=saved;
+  $id('hud-name').textContent=G.heroName.toUpperCase();
+  $id('hud-genre').textContent=(SCENARIOS[G.genre]||{name:'?'}).name.toUpperCase();
+  renderScene();
+  toast('✓ Jornada retomada!');
+}
+
+function confirmQuit(){
+  if(confirm('Sair para o menu? O progresso será salvo.')){saveGame();goTitle();}
+}
+
+function goTitle(){
+  hide('hud'); hide('story-wrap'); hide('choices-wrap');
+  hide('ending-screen'); hide('gallery-screen');
+  $id('scene-label').style.display='none';
+  show('title-screen');
+  updateContBtn();
+}
+
+function updateContBtn(){
+  const s=loadSave();
+  $id('cont-btn').disabled=!s;
+  if(s)$id('cont-btn').title='Continuar como '+s.heroName;
+}
+
+function showGallery(){
+  hide('title-screen');hide('hud');hide('story-wrap');hide('choices-wrap');
+  hide('ending-screen');$id('scene-label').style.display='none';
+  show('gallery-screen');
+  renderGallery();
+}
+
+function renderGallery(){
+  const gal=getGallery(); const grid=$id('gal-grid');
+  const tl={heroico:'HEROICO',tragico:'TRÁGICO',misterioso:'MISTERIOSO',neutro:'NEUTRO'};
+  grid.innerHTML='';
+  ENDINGS.forEach(ending=>{
+    const u=gal.find(g=>g.endingId===ending.id);
+    const card=document.createElement('div');
+    card.className='gal-card'+(u?'':' locked');
+    if(u){
+      card.innerHTML=`<div class="gc-type" style="color:${ending.color}">${ending.emoji} ${tl[ending.type]||ending.type}</div>
+        <div class="gc-title">${ending.title}</div>
+        <div class="gc-hero">Por: ${u.heroName}</div>
+        <div class="gc-date">${u.date} · ${(SCENARIOS[u.genre]||{name:u.genre}).name}</div>`;
+    } else {
+      card.innerHTML=`<span class="gc-lock">🔒</span>
+        <div class="gc-type" style="color:#333">${tl[ending.type]||''}</div>
+        <div class="gc-title" style="color:#333">???</div>
+        <div class="gc-hero" style="color:#222">Final bloqueado</div>`;
+    }
+    grid.appendChild(card);
+  });
+  if(gal.length===0)grid.innerHTML='<div class="gal-empty">NENHUM FINAL DESBLOQUEADO AINDA.<br><br>COMPLETE UMA JORNADA<br>PARA DESBLOQUEAR.</div>';
+  $id('gal-count').textContent=`${gal.length} / ${ENDINGS.length} FINAIS DESBLOQUEADOS`;
+}
+
+// ═══════════════════════ KEYBOARD ═══════════════════════
+document.addEventListener('keydown',e=>{
+  const btns=document.querySelectorAll('.choice-btn:not([disabled])');
+  const i=parseInt(e.key)-1;
+  if(i>=0&&i<btns.length)btns[i].click();
+});
+
+// ═══════════════════════ INIT ═══════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  G.genre='fantasia'; updateContBtn();
+});
+
+// globals for onclick
+window.openNewGame=openNewGame;window.startGame=startGame;
+window.continueGame=continueGame;window.confirmQuit=confirmQuit;
+window.goTitle=goTitle;window.showGallery=showGallery;
+window.openModal=openModal;window.closeModal=closeModal;
+window.selGenre=selGenre;window.toggleMusic=toggleMusic;
+</script>
+</body>
+</html>
